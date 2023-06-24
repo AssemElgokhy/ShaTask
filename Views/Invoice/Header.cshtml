@@ -1,27 +1,71 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-@{
-}
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html>
 <head>
-    <title>Hello, World!</title>
+    <title>Invoice</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
 </head>
 <body>
     <h1>Invoice</h1>
-    <form asp-controller="Invoice" asp-action="Header" method="post">
-        <div class="invoice-total">Total: <span class="total-amount">0.00</span></div>
-        <a asp-controller="Invoice" asp-action="Header" asp-area="" type="" class="btn btn-primary">Create Invoice</a>
-        <button type="submit" class="btn btn-primary">Submit</button>
-    </form>
+    <table>
+        <thead>
+            <tr>
+                <th>Item Name</th>
+                <th>Item Count</th>
+                <th>Item Price</th>
+                <th>Total Price</th>
+            </tr>
+        </thead>
+        <tbody id="invoice-items"></tbody>
+    </table>
+    <div class="invoice-total">Total: <span class="total-amount">0.00</span></div>
+    <a asp-controller="Invoice" asp-action="Header" asp-area="" type="" class="btn btn-primary">Create Invoice</a>
+    <button type="submit" class="btn btn-primary">Submit</button>
 
-</body>
-</html>
-@section scripts {
     <script>
-        var totalAmount = parseFloat(localStorage.getItem('totalAmount')) || 0;
+        var allItems = localStorage.getItem('allItems');
+        var items = allItems ? JSON.parse(allItems) : [];
+        var tbody = document.getElementById('invoice-items');
+        var totalAmount = 0;
         var totalItem = document.querySelector('.total-amount');
+
+        items.forEach(function (item) {
+            var row = document.createElement('tr');
+            var nameCell = document.createElement('td');
+            var countCell = document.createElement('td');
+            var priceCell = document.createElement('td');
+            var totalCell = document.createElement('td');
+
+            nameCell.textContent = item.ItemName;
+            countCell.textContent = item.ItemCount;
+            priceCell.textContent = item.ItemPrice.toFixed(2);
+            totalCell.textContent = (item.ItemCount * item.ItemPrice).toFixed(2);
+
+            row.appendChild(nameCell);
+            row.appendChild(countCell);
+            row.appendChild(priceCell);
+            row.appendChild(totalCell);
+
+            tbody.appendChild(row);
+
+            totalAmount += item.ItemCount * item.ItemPrice;
+        });
+
         totalItem.textContent = totalAmount.toFixed(2);
     </script>
-}
+</body>
+</html>
