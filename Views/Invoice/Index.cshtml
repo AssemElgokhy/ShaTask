@@ -1,0 +1,103 @@
+﻿@model IEnumerable<Item>
+
+
+
+
+<header>
+    <h1>Hello invoice controller</h1>
+    <a type="button" class="btn btn-primary" asp-area="" asp-controller="Invoice" asp-action="Create">Create Item</a>
+</header>
+
+<body>
+    <form asp-controller="Invoice" asp-action="Header" method="post">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">ItemName</th>
+                    <th scope="col">ItemPrice</th>
+                    <th scope="col"></th>
+                    <th scope="col">Count</th>
+                    <th scope="col">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <th scope="row">@item.Id</th>
+                        <td>@item.ItemName</td>
+                        <td>@item.ItemPrice</td>
+                        <td>
+                            <a asp-controller="Invoice" asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary">Edit</a>
+                            <a asp-controller="Invoice" asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary">Delete</a>
+                        </td>
+                        <td>
+                            <div></div>
+                            <input type="number" class="item-count" data-price="@item.ItemPrice" data-name="@item.ItemName" min="0">
+                        </td>
+                        <td>
+                            <div class="total-price"></div>
+                            <input type="hidden" class="total-price-input" name="totalPrices" value="" />
+                            <input type="hidden" name="itemIds" value="@item.Id" />
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        <div class="invoice-total">Total: <span class="total-amount">0.00</span></div>
+        <button type="submit" class="btn btn-primary">Save</button>
+    </form>
+
+    <a asp-controller="Invoice" asp-action="Header" asp-area="" type="button" class="btn btn-primary">Create Invoice</a>
+
+    @section scripts{
+        <script>
+            localStorage.setItem('allItems', JSON.stringify([]));
+
+            $(document).ready(function () {
+                $('.item-count').on('input', function () {
+                    var itemCount = parseInt($(this).val());
+                    var itemPrice = parseFloat($(this).data('price'));
+                    var itemName = $(this).data('name');
+                    var totalPrice = isNaN(itemCount) || isNaN(itemPrice) ? 0 : itemCount * itemPrice;
+                    var $totalPriceInput = $(this).closest('tr').find('.total-price-input');
+                    $totalPriceInput.val(totalPrice.toFixed(2));
+                    $(this).closest('tr').find('.total-price').text(totalPrice.toFixed(2));
+                    recalculateTotalAmount();
+                    var itemId = $(this).closest('tr').find('input[name="itemIds"]').val();
+                    var itemsLocalStorage = JSON.parse(localStorage.getItem('allItems'));
+                    var itemExists = false;
+
+                    for (var i = 0; i < itemsLocalStorage.length; i++) {
+                        if (itemsLocalStorage[i].itemId === itemId) {
+                            itemsLocalStorage[i].itemCount = itemCount;
+                            itemExists = true;
+                            break;
+                        }
+                    }
+
+                    if (!itemExists) {
+                        // Add the item to the array
+                        itemsLocalStorage.push({ itemId: itemId, itemCount: itemCount, itemPrice: itemPrice, itemName: itemName });
+                    }
+
+                    localStorage.setItem('allItems', JSON.stringify(itemsLocalStorage));
+                });
+                function recalculateTotalAmount() {
+                    var totalAmount = 0;
+                    $('.total-price-input').each(function () {
+                        if (!isNaN(parseFloat($(this).val()))) {
+                            totalAmount += parseFloat($(this).val());
+                        }
+                    });
+                    $('.total-amount').text(totalAmount.toFixed(2));
+
+                    localStorage.setItem('totalAmount', totalAmount.toFixed(2));
+                }
+
+                recalculateTotalAmount();
+            });
+        </script>
+    }
+</body>
